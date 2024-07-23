@@ -1,0 +1,204 @@
+
+  <!DOCTYPE html>
+  <html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://kit.fontawesome.com/64d58efce2.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="st.css" />
+    <title>Sign in & Sign up Form</title>
+  </head>
+  
+  <body>
+    <div class="container">
+      <div class="forms-container">
+        <div class="signin-signup">
+          <!-- Sign-in Form -->
+          <form action="#" class="sign-in-form">
+            <h2 class="title">Sign in</h2>
+            <div class="input-field">
+              <i class="fas fa-user"></i>
+              <input type="text" name="email" placeholder="Email" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Password" />
+            </div>
+            <input type="submit" value="Login" class="btn solid" />
+            <p class="social-text">Or Sign in with social platforms</p>
+            <div class="social-media">
+              <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-google"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+          </form>
+  
+          <!-- Sign-up Form -->
+          <form action="#" class="sign-up-form">
+            <h2 class="title">Sign up</h2>
+            <div class="input-field">
+              <i class="fas fa-user"></i>
+              <input type="text" name="username" placeholder="Username" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-envelope"></i>
+              <input type="email" name="email" placeholder="Email" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Password" />
+            </div>
+            <input type="submit" class="btn" value="Sign up" />
+            <p class="social-text">Or Sign up with social platforms</p>
+            <div class="social-media">
+              <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-google"></i></a>
+              <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+      <div class="panels-container">
+        <div class="panel left-panel">
+          <div class="content">
+            <h3>Don't have an Account ?</h3>
+            <p>Click the sign up button below to create a new Account!</p>
+            <button class="btn transparent" id="sign-up-btn">Sign up</button>
+          </div>
+          <img src="img/log.svg" class="image" alt="" />
+        </div>
+        <div class="panel right-panel">
+          <div class="content">
+            <h3>Already have an account ?</h3>
+            <p>Click the Sign in button below and get to your account.</p>
+            <button class="btn transparent" id="sign-in-btn">Sign in</button>
+          </div>
+          <img src="img/register.svg" class="image" alt="" />
+        </div>
+      </div>
+    </div>
+  
+    <li id="lg-account">
+      <a href="#" id="account-icon-mobile"><i class="fas fa-user"></i></a>
+      <ul id="account-dropdown" style="display: none;"></ul>
+    </li>
+  
+    <script src="app.js"></script>
+  
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+      import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+       const firebaseConfig = {
+          apiKey: "AIzaSyBdv8Lcd7pYlhXpWxkn5W2tsYJjiKIYvIE",
+          authDomain: "authentication-app-713f1.firebaseapp.com",
+          databaseURL: "https://authentication-app-713f1-default-rtdb.firebaseio.com",
+          projectId: "authentication-app-713f1",
+          storageBucket: "authentication-app-713f1.appspot.com",
+          messagingSenderId: "772996568948",
+          appId: "1:772996568948:web:eec5b654e6a703ec24fe21"
+        };
+
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const saveUserOptions = async (userId) => {
+        try {
+          const userOptions = {
+            options: [
+              "Profile details",
+              "Orders",
+              "Wishlist",
+              "Addresses",
+              "Preferences",
+              "Logout"
+            ]
+          };
+          await setDoc(doc(db, "users", userId), userOptions);
+        } catch (error) {
+          console.error("Error saving user options: ", error);
+        }
+      };
+
+      const getUserOptions = async (userId) => {
+        try {
+          const docRef = doc(db, "users", userId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            return docSnap.data().options;
+          } else {
+            console.log("No such document!");
+            return [];
+          }
+        } catch (error) {
+          console.error("Error getting user options: ", error);
+          return [];
+        }
+      };
+
+      const signUpForm = document.querySelector('.sign-up-form');
+      signUpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = signUpForm.querySelector('input[type="email"]').value;
+        const password = signUpForm.querySelector('input[type="password"]').value;
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          console.log('User signed up:', user);
+          await saveUserOptions(user.uid);
+          localStorage.setItem('loggedIn', 'true');
+          window.location.href = "../index.html";
+        } catch (error) {
+          console.error('Error signing up:', error);
+          alert("Error: " + error.message);
+        }
+      });
+
+      const signInForm = document.querySelector('.sign-in-form');
+      signInForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = signInForm.querySelector('input[type="text"]').value;
+        const password = signInForm.querySelector('input[type="password"]').value;
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          console.log('User signed in:', user);
+          localStorage.setItem('loggedIn', 'true');
+          window.location.href = "../index.html";
+        } catch (error) {
+          console.error('Error signing in:', error);
+          alert("Wrong username or password!");
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const accountIcon = document.getElementById('account-icon-mobile');
+        const dropdown = document.getElementById('account-dropdown');
+        const loggedIn = localStorage.getItem('loggedIn') === 'true';
+
+        if (loggedIn) {
+          onAuthStateChanged(auth, async (user) => {
+            if (user) {
+              accountIcon.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const options = await getUserOptions(user.uid);
+                dropdown.innerHTML = options.map(option => `<li><a href="#">${option}</a></li>`).join('');
+                dropdown.style.display = 'block';
+              });
+            } else {
+              console.log('User is not logged in');
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+  
+  </html>
